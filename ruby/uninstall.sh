@@ -1,0 +1,22 @@
+#!/bin/bash
+rm -rf /usr/local/lib/ruby
+rm -rf /usr/local/lib/libruby.so.1.9.1
+rm -rf /usr/local/lib/libruby.so.1.9
+rm -rf /usr/local/lib/libruby-static.a
+rm -rf /usr/local/lib/libruby.so
+rm -rf /usr/local/share/doc/ruby
+rm -rf /usr/local/share/ri
+rm -rf /usr/local/share/man/man1/ri.1
+rm -rf /usr/local/share/man/man1/rake.1
+rm -rf /usr/local/share/man/man1/erb.1
+rm -rf /usr/local/share/man/man1/ruby.1
+rm -rf /usr/local/share/man/man1/irb.1
+rm -rf /usr/local/include/ruby-1.9.1
+rm -rf /usr/local/bin/gem
+rm -rf /usr/local/bin/ri
+rm -rf /usr/local/bin/erb
+rm -rf /usr/local/bin/ruby
+rm -rf /usr/local/bin/rdoc
+rm -rf /usr/local/bin/testrb
+rm -rf /usr/local/bin/irb
+rm -rf /usr/local/bin/rake
