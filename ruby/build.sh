@@ -1,5 +1,6 @@
 #!/bin/bash
-SRCFILE=`ls ruby-1.9*.tar.bz2`
+SRCURL="ftp://ftp.ruby-lang.org/pub/ruby/1.9/ruby-1.9.2-p290.tar.bz2"
+SRCFILE='ruby-1.9*.tar.bz2'
 NAME=`echo ${SRCFILE}|sed 's/-.*\.tar\.bz2'//`
 VERSION=`echo ${SRCFILE}|sed "s/${NAME}-//"|sed 's/\.tar\.bz2//'`
 COMPILE=`echo ${SRCFILE}|sed 's/\.tar\.bz2//'`
@@ -15,16 +16,59 @@ if [ -z "$ARCH" ]; then
   esac
 fi
 
+download_src(){
+    while true
+    do
+        echo "Source file not found. Download? (Y/n)."
+        read -s  answer
+
+        if [[ $answer = "" ]]; then
+            answer=y;
+        fi
+
+        case  "$answer" in
+            Y|y)
+            wget ${SRCURL} | return -1             
+            SRCFILE=`ls ${SRCFILE}`
+            return 0
+            break
+            ;;
+            N|n)
+            echo "Is not possible continue without source file. Download it manualy on http://www.ruby-lang.org"
+            return -1
+            break
+            ;;
+            *)
+            echo "\"$answer\" is not an answer. Please answer y(yes) or n(no)." 
+            ;;
+        esac
+done
+
+
+}
+
 comp_prg(){
-	
-	if ! ls ${SRCFILE} >/dev/null; then
-		echo "source file ${SRCFILE} not found"
-		exit
-	fi
+	while true
+    do
+	    if ! ls ${SRCFILE} >/dev/null; then
+            if download_src; then 
+                break
+            else
+                echo "Is not possible download srcfile."
+                exit
+                break
+            fi
+        else
+            break
+    	fi
+    done
+
 	if [ -x ./${COMPILE} ]; then 
 		rm -rf ./${COMPILE}
 	fi
-	tar -xjvf ruby-1.9*.tar.bz2 -C .
+	
+    tar -xjvf ${SRCFILE} -C .
+
 	cd $COMPILE
 	./configure --enable-shared
 	make
