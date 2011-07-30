@@ -1,11 +1,13 @@
 #!/usr/bin/python
 
-# dictionaryAttack.py
-# Author: Aaron Sinclair
-# version 1.2
+# dicAttackPrev.py
+# Author: Oseias Ferreira
+# version 0.1
+# Bases on Aaron Sinclair script
 # PURPOSE: monitors VPS's logs for brute force / dictionary type attacks and adds an IP
-# Tables rule to ban offending hosts incoming SSH port 22
-# 8 feb 2005: Added a check for lockfile to ensure only one process runs
+# Tables rule to ban offending hosts incoming SSH
+# 31 jul 2011: Added custon chain to control blocked hosts
+# 08 feb 2005: Added a check for lockfile to ensure only one process runs
 # at any one time.  Issues are if an instance crashes, the lockfile will be
 # left in place and future attempts to run this script will fail. Manual
 # removal of the lockfile will be required.
@@ -19,16 +21,17 @@ class dictionaryAttack:
 
         #IGNORE LIST; add as many ip addresses as needed.
         #This will ensure that these ip addresses are NOT blocked from accessing your system
-        self.ignoreList = ['127.0.01', '1.1.1.1']  # replace 1.1.1.1 with your remote SSH ipaddress
-
+        #self.ignoreList = ['127.0.01', '1.1.1.1', '192.168.0.1']  # replace 1.1.1.1 with your remote SSH ipaddress
+        self.ignoreList = ['127.0.0.1'] 
         self.numFailedAttempts = 15                      #numer of failed logins.
         self.fileName = "/var/log/auth.log"
-
         self.linesToRead = "500"                     #how many lines to read from the log
         self.timeToBan = 2592000                      #how many seconds to ban ip for (30 days)
         self.abuserFile = "/var/lib/abuser.txt"      #where to store ip list
         self.lockfile = "/var/run/dicAttackPrev.lock"
         self.iptables = "/sbin/iptables"            #path to iptables
+	self.chain    = "ABUSER"
+	self.port     = "22"
         self.fileContents = []
         self.abuserFileContents = []
         self.banList = []
@@ -55,7 +58,6 @@ class dictionaryAttack:
            self.abuserFileContents = file(self.abuserFile).readlines()
 
     def identifyHost(self):
-
         hits = {} 
         for line in self.fileContents:
                 if re.search("failed password", line.lower()):
@@ -73,9 +75,21 @@ class dictionaryAttack:
                                 if not ip.group() in self.banList:
                                         self.banList.append(ip.group())
 
+    def setupIPTABLES(self):
+	iptablesCheckChain = os.popen(self.iptables + " -L "+ self.chain +" > /dev/null 2>&1||"+ self.iptables + " -N "+ self.chain, "r")
+	
+	cmd= self.iptables+" -L INPUT -n|grep '^"+self.chain+"'|grep 'dpt:"+ \
+		self.port+"' >/dev/null 2>&1||"+self.iptables+" -I INPUT -p tcp --destination-port "+self.port+" -j "+self.chain
+	iptablesCheckRuleInput = os.popen(cmd,"r")
+
+	cmd= self.iptables+" -L FORWARD -n|grep '^"+self.chain+"'|grep 'dpt:"+ \
+		self.port+"' >/dev/null 2>&1||"+self.iptables+" -I FORWARD -p tcp --destination-port "+self.port+" -j "+self.chain
+	iptablesCheckRuleForward = os.popen(cmd,"r")
+
 
     def verifyIPTABLES(self):
-        iptablesFileOb = os.popen(self.iptables + " -L -n |grep dpt:22|grep DROP", "r")
+        iptablesFileOb = os.popen(self.iptables + " -L "+ self.chain +" -n |grep DROP", "r")
+
         iptables = []
         for line in iptablesFileOb:
                 iptables.append(line)
@@ -126,34 +140,38 @@ class dictionaryAttack:
                 if ip in self.iptablesIPLIST:
                         self.unbanList.append(ip)
         for ip in self.unbanList:
-                cmd = self.iptables + " -D INPUT -s " + ip + " -p tcp --destination-port 22 -j DROP"
+                #cmd = self.iptables + " -D INPUT -s " + ip + " -p tcp --destination-port 22 -j DROP"
+                cmd = self.iptables + " -D "+ self.chain +" -s " + ip + " -j DROP"
                 print cmd
                 os.system(cmd)
 
-                cmd = self.iptables + " -D FORWARD -s " + ip + " -p tcp --destination-port 22 -j DROP"
-                print cmd
-                os.system(cmd)
+                #cmd = self.iptables + " -D FORWARD -s " + ip + " -p tcp --destination-port 22 -j DROP"
+                #print cmd
+                #os.system(cmd)
 
     def banIp(self):
         for ip in self.banList:
-                cmd = self.iptables + " -I INPUT -s " + ip + " -p tcp --destination-port 22 -j DROP"
+                #cmd = self.iptables + " -I INPUT -s " + ip + " -p tcp --destination-port 22 -j DROP"
+                cmd = self.iptables + " -A " + self.chain + " -s " + ip + " -j DROP"
                 print cmd
                 os.system(cmd)
 
-                cmd = self.iptables + " -I FORWARD -s " + ip + " -p tcp --destination-port 22 -j DROP"
-                print cmd
-                os.system(cmd)
+                #cmd = self.iptables + " -I FORWARD -s " + ip + " -p tcp --destination-port 22 -j DROP"
+                #cmd = self.iptables + " -A " + self.chain + " -s " + ip + " -j DROP"
+                #print cmd
+                #os.system(cmd)
 
     def cleanup(self):
         os.popen("rm -f " + self.lockfile)
 
 
 attack = dictionaryAttack()
+attack.setupIPTABLES()
 attack.identifyHost()
 attack.checkDuplicates()
 attack.removeExpired()
 attack.saveAbuseFile()
 attack.verifyIPTABLES()
-attack.unbanIp()
 attack.banIp()
+attack.unbanIp()
 attack.cleanup()
