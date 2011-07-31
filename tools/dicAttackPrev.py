@@ -30,7 +30,7 @@ class dictionaryAttack:
         self.abuserFile = "/var/lib/abuser.txt"      #where to store ip list
         self.lockfile = "/var/run/dicAttackPrev.lock"
         self.iptables = "/sbin/iptables"            #path to iptables
-	self.chain    = "ABUSER"
+	self.chain    = "SSH"
 	self.port     = "22"
         self.fileContents = []
         self.abuserFileContents = []
@@ -76,19 +76,19 @@ class dictionaryAttack:
                                         self.banList.append(ip.group())
 
     def setupIPTABLES(self):
-	iptablesCheckChain = os.popen(self.iptables + " -L "+ self.chain +" > /dev/null 2>&1||"+ self.iptables + " -N "+ self.chain, "r")
+	iptablesCheckChain = os.popen(self.iptables + " -n -L "+ self.chain +" >/dev/null 2>&1||"+ self.iptables + " -N "+ self.chain, "r")
 	
-	cmd= self.iptables+" -L INPUT -n|grep '^"+self.chain+"'|grep 'dpt:"+ \
+	cmd= self.iptables+" -n -L INPUT|grep '^"+self.chain+"'|grep 'dpt:"+ \
 		self.port+"' >/dev/null 2>&1||"+self.iptables+" -I INPUT -p tcp --destination-port "+self.port+" -j "+self.chain
 	iptablesCheckRuleInput = os.popen(cmd,"r")
 
-	cmd= self.iptables+" -L FORWARD -n|grep '^"+self.chain+"'|grep 'dpt:"+ \
+	cmd= self.iptables+" -n -L FORWARD|grep '^"+self.chain+"'|grep 'dpt:"+ \
 		self.port+"' >/dev/null 2>&1||"+self.iptables+" -I FORWARD -p tcp --destination-port "+self.port+" -j "+self.chain
 	iptablesCheckRuleForward = os.popen(cmd,"r")
 
 
     def verifyIPTABLES(self):
-        iptablesFileOb = os.popen(self.iptables + " -L "+ self.chain +" -n |grep DROP", "r")
+        iptablesFileOb = os.popen(self.iptables + " -n -L "+ self.chain +"|grep DROP", "r")
 
         iptables = []
         for line in iptablesFileOb:
@@ -138,7 +138,7 @@ class dictionaryAttack:
     def unbanIp(self):
         for ip in self.ignoreList:
                 if ip in self.iptablesIPLIST:
-                        self.unbanList.append(ip)
+                	self.unbanList.append(ip)
         for ip in self.unbanList:
                 #cmd = self.iptables + " -D INPUT -s " + ip + " -p tcp --destination-port 22 -j DROP"
                 cmd = self.iptables + " -D "+ self.chain +" -s " + ip + " -j DROP"
@@ -160,6 +160,16 @@ class dictionaryAttack:
                 #cmd = self.iptables + " -A " + self.chain + " -s " + ip + " -j DROP"
                 #print cmd
                 #os.system(cmd)
+
+	# Accept all another conections
+	# Delete first to change to the last rule
+	if len(self.banList) > 0:	
+		cmd = self.iptables + " -D " + self.chain + " -j ACCEPT >/dev/null 2>&1"
+        	print cmd
+	        os.system(cmd)
+		cmd = self.iptables + " -A " + self.chain + " -j ACCEPT >/dev/null 2>&1"
+	        print cmd
+        	os.system(cmd)
 
     def cleanup(self):
         os.popen("rm -f " + self.lockfile)
