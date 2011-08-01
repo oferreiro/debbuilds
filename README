@@ -1,0 +1,12 @@
+Readme
+-------
+
+This is only another personal package scripts to manage small server.
+I found a way to make package on debian, using checkinstall. But everytime when I tried this command it was failed. (bug?)
+Then I decide find another way to make this.
+This scripts works similar with slackbuils, but to debian distros.
+To get help just execute the scrip with param -h.
+I included some scripts to clean system and tools to protect server from dictionary ssh attack.
+
+Bug reports and suggestions is appreciated.
+
