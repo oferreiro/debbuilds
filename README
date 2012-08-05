@@ -1,12 +1,26 @@
 Readme
 -------
 
-This is only another personal package scripts to manage small server.
+This is only another personal package scripts to manage small server without RVM (I don't like RVM on my single server).
 I found a way to make package on debian, using checkinstall. But everytime when I tried this command it was failed. (bug?)
 Then I decide find another way to make this.
 This scripts works similar with slackbuils, but to debian distros.
 To get help just execute the scrip with param -h.
 I included some scripts to clean system and tools to protect server from dictionary ssh attack.
 
-Bug reports and suggestions is appreciated.
+How to use:
+-----------
+Download nginx-1x (http://nginx.org) and ruby-1.9.x (http://ruby.org).
+Put on their work directory.
+Enter on directory and execute build.sh script.
+./build.sh compile  :to uncompress and compile sources.
+./build.sh pkg  :to generate a .deb pkg.
+./build.sh clean :I think you now.
+sudo ./build.sh dep :to install dependencies.
 
+To install just use dpkg -i your.deb
+
+If you want remove all files installed use dpkg -r yourpkg
+If you really need remove all things use uninstall.sh
+
+Bug reports and suggestions are appreciated.

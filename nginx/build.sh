@@ -4,7 +4,9 @@ CONFDIR='/etc/nginx'
 SRCFILE=`ls nginx-1*.tar.gz`
 NAME=`echo ${SRCFILE}|sed 's/-.*\.tar\.gz'//`
 VERSION=`echo ${SRCFILE}|sed "s/${NAME}-//"|sed 's/\.tar\.gz//'`
-COMPILE=`echo ${SRCFILE}|sed 's/\.tar\.gz//'`
+CURR=`pwd`
+BUILD="${CURR}/build"
+COMPILE="${BUILD}/`echo ${SRCFILE}|sed 's/\.tar\.gz//'`"
 TMPDIR=/tmp/${NAME}
 DEBDIR=${TMPDIR}/DEBIAN
 
@@ -18,15 +20,20 @@ if [ -z "$ARCH" ]; then
 fi
 
 comp_prg(){
-	if [ -x ./${COMPILE} ]; then 
-		rm -rf ./${COMPILE}
+	if [ -x ${COMPILE} ]; then 
+		rm -rf ${COMPILE}
 	fi
 	
 	if ! ls ${SRCFILE} >/dev/null; then
 		echo "Source file ${SRCFILE} not found"
 		exit
 	fi
-	tar -xzvf ${SRCFILE} -C .
+
+	if [ ! -x ${BUILD} ]; then
+		mkdir -p ${BUILD}
+	fi
+ 
+	tar -xzvf ${SRCFILE} -C ${BUILD}
 	cd ${COMPILE}
 
 	if ! which passenger-config >/dev/null; then  
@@ -82,9 +89,9 @@ make_pack(){
 	
 	mkdir ${DEBDIR}
 	mkdir ${TMPDIR}/etc/init.d
-	cp ../inst-scripts/nginx ${TMPDIR}/etc/init.d/
-	cp ../inst-scripts/postinst ${DEBDIR}
-	cp ../inst-scripts/prerm ${DEBDIR}
+	cp "${CURR}/inst-scripts/nginx" "${TMPDIR}/etc/init.d/"
+	cp "${CURR}/inst-scripts/postinst" ${DEBDIR}
+	cp "${CURR}/inst-scripts/prerm" ${DEBDIR}
 	chmod 755 ${DEBDIR}/postinst
 	chmod 755 ${DEBDIR}/prerm
 	chmod 755 ${TMPDIR}/etc/init.d/nginx
@@ -106,10 +113,10 @@ EOF
 		echo ${CONFDIR}/$i >> ${DEBDIR}/conffiles
 	done
 	echo '/etc/init.d/nginx' >>  ${DEBDIR}/conffiles
-	cd ${TMPDIR}
-	cd ../
+	cd "${TMPDIR}/../"
 	dpkg-deb --build ${NAME}
-	mv ${NAME}.deb ${NAME}-${VERSION}_${ARCH}.deb
+	mv ${NAME}.deb "${CURR}/${NAME}-${VERSION}_${ARCH}.deb"
+	rm -rf ${TMPDIR}
 }
 
 case "$1" in
