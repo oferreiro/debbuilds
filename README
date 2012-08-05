@@ -15,7 +15,7 @@ Put on their work directory.
 Enter on directory and execute build.sh script.
 ./build.sh compile  :to uncompress and compile sources.
 ./build.sh pkg  :to generate a .deb pkg.
-./build.sh clean :I think you now.
+./build.sh clean :I think you know.
 sudo ./build.sh dep :to install dependencies.
 
 To install just use dpkg -i your.deb
