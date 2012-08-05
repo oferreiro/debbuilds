@@ -1,11 +1,9 @@
 .DS_Store
 */.DS_Store
-*/*.gz
-*/*.bz2
 *~
 tmp/*
 */build/
 */old/*
-*/*.bz2
 */*.gz
+*/*.bz2
 */*.deb
