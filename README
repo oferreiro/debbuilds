@@ -10,7 +10,7 @@ I included some scripts to clean system and tools to protect server from diction
 
 How to use:
 -----------
-Download nginx-1x (http://nginx.org) and ruby-1.9.x (http://ruby.org).
+Download nginx-1x (http://nginx.org) and ruby-1.9.x (http://www.ruby-lang.org).
 Put on their work directory.
 Enter on directory and execute build.sh script.
 ./build.sh compile  :to uncompress and compile sources.

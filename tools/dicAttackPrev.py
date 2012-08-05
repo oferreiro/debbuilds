@@ -2,7 +2,7 @@
 
 # dicAttackPrev.py
 # Author: Oseias Ferreira
-# version 0.1
+# version 0.2
 # Bases on Aaron Sinclair script
 # PURPOSE: monitors VPS's logs for brute force / dictionary type attacks and adds an IP
 # Tables rule to ban offending hosts incoming SSH
@@ -11,8 +11,6 @@
 # at any one time.  Issues are if an instance crashes, the lockfile will be
 # left in place and future attempts to run this script will fail. Manual
 # removal of the lockfile will be required.
-# #
-#
 
 import os, re, time, string, sys
 
@@ -140,26 +138,16 @@ class dictionaryAttack:
                 if ip in self.iptablesIPLIST:
                 	self.unbanList.append(ip)
         for ip in self.unbanList:
-                #cmd = self.iptables + " -D INPUT -s " + ip + " -p tcp --destination-port 22 -j DROP"
                 cmd = self.iptables + " -D "+ self.chain +" -s " + ip + " -j DROP"
                 print cmd
                 os.system(cmd)
 
-                #cmd = self.iptables + " -D FORWARD -s " + ip + " -p tcp --destination-port 22 -j DROP"
-                #print cmd
-                #os.system(cmd)
 
     def banIp(self):
         for ip in self.banList:
-                #cmd = self.iptables + " -I INPUT -s " + ip + " -p tcp --destination-port 22 -j DROP"
                 cmd = self.iptables + " -A " + self.chain + " -s " + ip + " -j DROP"
                 print cmd
                 os.system(cmd)
-
-                #cmd = self.iptables + " -I FORWARD -s " + ip + " -p tcp --destination-port 22 -j DROP"
-                #cmd = self.iptables + " -A " + self.chain + " -s " + ip + " -j DROP"
-                #print cmd
-                #os.system(cmd)
 
 	# Accept all another conections
 	# Delete first to change to the last rule
