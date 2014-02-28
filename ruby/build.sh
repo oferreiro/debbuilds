@@ -1,14 +1,14 @@
 #!/bin/bash
-SRCFILE=`ls ruby-1.9*.tar.bz2`
-NAME=`echo ${SRCFILE}|sed 's/-.*\.tar\.bz2'//`
-VERSION=`echo ${SRCFILE}|sed "s/${NAME}-//"|sed 's/\.tar\.bz2//'`
 CURR=`pwd`
 BUILD="${CURR}/build"
-COMPILE="${BUILD}/`echo ${SRCFILE}|sed 's/\.tar\.bz2//'`"
+SRCFILE=$(ls ruby-*.tar.bz2|sort -r|head -n1)
+COMPILE="${BUILD}/$(echo ${SRCFILE}|sed 's/\.tar\.bz2//')"
+FIRSTNAME=$(echo ${SRCFILE}|sed 's/-.*\.tar\.bz2'//)
+VERSION=$(echo ${SRCFILE}|sed "s/${FIRSTNAME}-//"|sed 's/\.tar\.bz2//')
+SUBNAME=$(echo ${VERSION}|sed 's/\-.*$//')
+NAME=${FIRSTNAME}${SUBNAME}
 TMPDIR=/tmp/${NAME}
 DEBDIR=${TMPDIR}/DEBIAN
-echo $BUILD
-echo $COMPILE
 
 if [ -z "$ARCH" ]; then
   case "$( uname -m )" in
@@ -33,7 +33,7 @@ comp_prg(){
 		mkdir -p ${BUILD} 
 	fi 
 
-	tar -xjvf ruby-1.9*.tar.bz2 -C ${BUILD}
+	tar -xjvf ${SRCFILE} -C ${BUILD}
 	cd ${COMPILE}
 	./configure --enable-shared
 	make
@@ -47,6 +47,8 @@ make_pack(){
 	make install DESTDIR=${TMPDIR}
 	mkdir $DEBDIR
 	SIZE=`du -sx --exclude DEBIAN  ${TMPDIR}|tr '\t' ' '|sed 's/ .*//'`
+	
+	# package label
 	cat > ${DEBDIR}/control << EOF
 Package: ${NAME}
 Version: ${VERSION}
@@ -54,10 +56,11 @@ Section: custom
 Priority: optional
 Architecture: ${ARCH}
 Essential: no
-Installed-Size: 80
-Maintainer: oferreiro.info
-Description: Last version of ruby
+Installed-Size: ${SIZE}
+Maintainer: oseias@oferreiro.info
+Description: Last version of ruby compiled for my personal use
 EOF
+	
 	cd "${TMPDIR}/../"
 	dpkg-deb --build ${NAME}
 	mv ${NAME}.deb "${CURR}/${NAME}-${VERSION}_${ARCH}.deb"
@@ -76,7 +79,14 @@ case "$1" in
 	rm -rf ./${COMPILE}
 	;;
 	deps)
-	apt-get install libc6-dev libssl-dev libreadline5-dev zlib1g-dev
+	case $(lsb_release -rs) in
+		6.*)
+			apt-get install libc6-dev libssl-dev libreadline5-dev zlib1g-dev
+		;;
+		7.*)
+			apt-get install libc6-dev libssl-dev libreadline-dev zlib1g-dev
+		;;
+	esac	
 	;;
 	*)
 	echo "$0 (compile | pkg | clean | deps)"
