@@ -12,7 +12,7 @@ DEBDIR=${TMPDIR}/DEBIAN
 
 if [ -z "$ARCH" ]; then
   case "$( uname -m )" in
-    i?86) ARCH=i486 ;;
+    i?86) ARCH=i386 ;;
     arm*) ARCH=arm ;;
     x86_64) ARCH=amd64;;	
        *) ARCH=$( uname -m ) ;;
