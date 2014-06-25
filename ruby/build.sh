@@ -35,8 +35,7 @@ comp_prg(){
 
 	tar -xjvf ${SRCFILE} -C ${BUILD}
 	cd ${COMPILE}
-	./configure --enable-shared
-	make
+	./configure --enable-shared && make
 }
 
 make_pack(){
